@@ -1,5 +1,5 @@
 name = "brandloom-api"
-main = "src/index.ts"
+main = "src/entry.ts"
 compatibility_date = "2025-03-03"
 
 [vars]

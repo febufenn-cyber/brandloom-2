@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import type { ZodType } from 'zod';
+import type { output, ZodTypeAny } from 'zod';
 import type { Env } from './types';
 
 function extractJson(text: string): unknown {
@@ -11,12 +11,12 @@ function extractJson(text: string): unknown {
   return JSON.parse(candidate.slice(first, last + 1));
 }
 
-export async function generateStructured<T>(
+export async function generateStructured<Schema extends ZodTypeAny>(
   env: Env,
-  schema: ZodType<T>,
+  schema: Schema,
   system: string,
   payload: unknown,
-): Promise<{ data: T; usage: { input_tokens: number; output_tokens: number } }> {
+): Promise<{ data: output<Schema>; usage: { input_tokens: number; output_tokens: number } }> {
   if (!env.ANTHROPIC_MODEL) throw new Error('ANTHROPIC_MODEL is not configured.');
   const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
   const result = await client.messages.create({
@@ -30,6 +30,6 @@ export async function generateStructured<T>(
     }],
   });
   const text = result.content.filter((part) => part.type === 'text').map((part) => part.text).join('\n');
-  const data = schema.parse(extractJson(text));
+  const data = schema.parse(extractJson(text)) as output<Schema>;
   return { data, usage: result.usage };
 }
