@@ -1,42 +1,120 @@
 # Brandloom
 
-> learns an SMB's brand voice once, then pumps out on-brand social posts, captions and ad copy on a weekly schedule.
+> Tell Brandloom about your business once. Each week, choose what you want to achieve and receive a seven-day Instagram content plan written in your brand's voice—ready to review, edit and approve.
 
-**Alternative to the product-shape pioneered by Kaya (YC S21)** — rank #2 of 500 in the [YC-500 Fable 5 Venture Blueprint](https://github.com/) (score 7.4/10).
+Brandloom Phase 1 is now a runnable, human-approved brand intelligence and weekly content studio. It deliberately avoids automatic publishing, billing and broad multi-platform complexity until the core quality loop is proven.
 
-## Why this exists
-SMBs need marketing output but cannot afford real agencies. The buildable wedge: self-serve content and ad-copy generator with a brand memory.
+## What is implemented
 
-## MVP scope
-- [ ] Brand-voice setup
-- [ ] weekly content plan
-- [ ] post/caption drafts
-- [ ] ad-copy variants
-- [ ] approve-and-schedule
+- Brand onboarding and readiness scoring
+- Product library with approved facts and forbidden claims
+- Audience cards with pains, motives and objections
+- Voice calibration through contrasts, preferred language and positive/negative examples
+- AI-generated Brand Constitution
+- Weekly campaign strategist
+- Structured Instagram drafts: hook, caption, CTA, format, visual brief and hashtags
+- Quality flags for prohibited language, AI clichés, unsupported facts, repeated hooks and weak specificity
+- Selective field regeneration
+- Human editing and approval
+- Version history, feedback events and generation provenance
+- Supabase RLS tenant isolation
 
-## Architecture
-`Workers+Supabase+Claude` — Cloudflare Workers + Hono API, Supabase (Postgres + RLS + Auth + pgvector), Claude API via Agent SDK (claude-fable-5 for agent reasoning, claude-haiku-4-5 for volume), wrangler deploys.
+See [`docs/PHASE1.md`](docs/PHASE1.md) for the product boundary and API contract.
 
-**Integrations:** Claude API; Meta/Instagram Graph; Stripe
-**Data:** Brand profile, past posts, product list, content calendar.
-**Agent core:** Agent plans and drafts a full week of on-brand marketing content.
+## Stack
 
-## Business
-| | |
-|---|---|
-| Monetization | Flat monthly content subscription |
-| First customer | Small D2C brand or local service business |
-| GTM wedge | Show generated samples in founder/SMB communities; PLG free trial |
-| Competition risk | High: countless AI content tools |
-| Regulatory/trust risk | Low: marketing content only |
-| India angle | Cheap on-brand content for India's exploding small-brand and creator economy. |
-| Difficulty / build time | Low / 2-3 weeks |
+- **Web:** React + Vite + TypeScript
+- **API:** Cloudflare Workers + Hono
+- **Data/Auth:** Supabase Postgres + Auth + RLS
+- **Generation:** Anthropic API, with the model ID supplied through `ANTHROPIC_MODEL`
+- **Validation:** Zod plus deterministic quality rules
 
-## 30-day plan
-- **W1:** core loop — Brand-voice setup + weekly content plan
-- **W2:** post/caption drafts + ad-copy variants + approve-and-schedule + auth + billing
-- **W3:** polish, instrument events, seed first users via: Show generated samples in founder/SMB communities; PLG free trial
-- **W4:** launch + first revenue; kill/scale decision
+## Repository layout
 
----
-*Built with Fable 5 (Claude Code). Blueprint row: inspired by Kaya — "AI-powered marketing agency delivering campaigns cheaper and faster."*
+```text
+apps/
+  api/        Cloudflare Worker and generation pipeline
+  web/        React brand studio
+supabase/
+  migrations/ Phase 1 database and RLS policies
+docs/
+  PHASE1.md   Product contract and safety boundaries
+```
+
+## Local setup
+
+### 1. Install
+
+```bash
+corepack enable
+pnpm install
+```
+
+### 2. Create Supabase schema
+
+Create a Supabase project, then run:
+
+```bash
+supabase db push
+```
+
+Or paste `supabase/migrations/0001_phase1.sql` into the Supabase SQL editor.
+
+Enable email/password authentication in Supabase. For local testing, either disable email confirmation or confirm the test account.
+
+### 3. Configure the Worker
+
+```bash
+cp apps/api/.dev.vars.example apps/api/.dev.vars
+```
+
+Fill in:
+
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `ANTHROPIC_API_KEY`
+- `ANTHROPIC_MODEL`
+- `WEB_ORIGIN`
+
+The model ID is configuration rather than hard-coded so the project does not silently depend on an obsolete model name.
+
+### 4. Configure the web app
+
+```bash
+cp apps/web/.env.example apps/web/.env
+```
+
+Fill in the Supabase URL, anon key and local Worker URL.
+
+### 5. Run
+
+```bash
+pnpm dev
+```
+
+- Web: `http://localhost:5173`
+- API: normally `http://localhost:8787`
+
+## Verification
+
+```bash
+pnpm check
+```
+
+This runs TypeScript checks, unit tests and production builds for both applications.
+
+## Deployment
+
+Deploy the API:
+
+```bash
+cd apps/api
+pnpm wrangler secret put ANTHROPIC_API_KEY
+pnpm deploy
+```
+
+Set the remaining Worker variables in `wrangler.toml` or the Cloudflare dashboard. Deploy `apps/web/dist` to Cloudflare Pages or another static host and point `VITE_API_URL` to the Worker.
+
+## Product rule
+
+Generation is not the moat. The retained record of what a brand approved, rejected and rewrote is the beginning of the moat. Phase 1 captures that evidence without pretending the system is autonomous.

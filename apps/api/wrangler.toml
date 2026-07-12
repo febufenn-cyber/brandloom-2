@@ -1,0 +1,8 @@
+name = "brandloom-api"
+main = "src/index.ts"
+compatibility_date = "2025-03-03"
+
+[vars]
+WEB_ORIGIN = "http://localhost:5173"
+# Configure SUPABASE_URL, SUPABASE_ANON_KEY and ANTHROPIC_MODEL here for non-secret values.
+# Store ANTHROPIC_API_KEY using: pnpm wrangler secret put ANTHROPIC_API_KEY
