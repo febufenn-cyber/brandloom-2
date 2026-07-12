@@ -4,5 +4,13 @@ compatibility_date = "2025-03-03"
 
 [vars]
 WEB_ORIGIN = "http://localhost:5173"
-# Configure SUPABASE_URL, SUPABASE_ANON_KEY and ANTHROPIC_MODEL here for non-secret values.
-# Store ANTHROPIC_API_KEY using: pnpm wrangler secret put ANTHROPIC_API_KEY
+PUBLISHING_PROVIDER_MODE = "mock"
+META_OAUTH_USE_PKCE = "true"
+
+[triggers]
+crons = ["* * * * *"]
+
+# Configure SUPABASE_URL, SUPABASE_ANON_KEY, ANTHROPIC_MODEL and current Meta endpoint values.
+# Store these with `wrangler secret put`:
+# SUPABASE_SERVICE_ROLE_KEY, ANTHROPIC_API_KEY, TOKEN_ENCRYPTION_KEY,
+# CRON_SECRET, META_APP_SECRET and META_WEBHOOK_VERIFY_TOKEN.

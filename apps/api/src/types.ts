@@ -3,9 +3,24 @@ import type { SupabaseClient, User } from '@supabase/supabase-js';
 export type Env = {
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
+  SUPABASE_SERVICE_ROLE_KEY: string;
   ANTHROPIC_API_KEY: string;
   ANTHROPIC_MODEL: string;
   WEB_ORIGIN?: string;
+  TOKEN_ENCRYPTION_KEY: string;
+  PUBLISHING_PROVIDER_MODE?: 'mock' | 'meta';
+  CRON_SECRET?: string;
+  META_APP_ID?: string;
+  META_APP_SECRET?: string;
+  META_REDIRECT_URI?: string;
+  META_OAUTH_AUTHORIZE_URL?: string;
+  META_OAUTH_TOKEN_URL?: string;
+  META_LONG_LIVED_TOKEN_URL?: string;
+  META_REFRESH_TOKEN_URL?: string;
+  META_GRAPH_BASE_URL?: string;
+  META_REQUIRED_SCOPES?: string;
+  META_OAUTH_USE_PKCE?: string;
+  META_WEBHOOK_VERIFY_TOKEN?: string;
 };
 
 export type Variables = {

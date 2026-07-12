@@ -8,6 +8,13 @@ export function createUserClient(env: Env, token: string) {
   });
 }
 
+export function createServiceClient(env: Env) {
+  if (!env.SUPABASE_SERVICE_ROLE_KEY) throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured.');
+  return createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
 export async function loadBrandBundle(supabase: ReturnType<typeof createUserClient>, brandId: string) {
   const [brandResult, profileResult, productsResult, audiencesResult] = await Promise.all([
     supabase.from('brands').select('*').eq('id', brandId).single(),
