@@ -15,10 +15,10 @@ create or replace function public.prevent_publication_snapshot_mutation()
 returns trigger language plpgsql set search_path = public
 as $$ begin raise exception 'Publication snapshots are immutable'; end; $$;
 
+-- Authenticated users have no DELETE grant on snapshots. Keep row updates impossible while
+-- allowing legitimate foreign-key cascades during workspace or content deletion.
 create trigger publication_snapshots_immutable_update
 before update on public.publication_snapshots for each row execute function public.prevent_publication_snapshot_mutation();
-create trigger publication_snapshots_immutable_delete
-before delete on public.publication_snapshots for each row execute function public.prevent_publication_snapshot_mutation();
 
 create or replace function public.log_publication_status_change()
 returns trigger language plpgsql security definer set search_path = public
