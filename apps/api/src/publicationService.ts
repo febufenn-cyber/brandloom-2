@@ -138,8 +138,11 @@ export async function createPublicationJob(input: {
     mime_type: attachment.asset.mime_type,
     size_bytes: Number(attachment.asset.size_bytes ?? 0),
     checksum: await sha256Hex(JSON.stringify({
-      id: attachment.asset.id, path: attachment.asset.storage_path, size: attachment.asset.size_bytes,
-      mime: attachment.asset.mime_type, updated: attachment.asset.updated_at,
+      id: attachment.asset.id,
+      path: attachment.asset.storage_path,
+      size: attachment.asset.size_bytes,
+      mime: attachment.asset.mime_type,
+      updated: attachment.asset.updated_at,
     })),
   })));
   const snapshot = {
@@ -157,8 +160,11 @@ export async function createPublicationJob(input: {
       scheduled_date: detail.content.scheduled_date,
     },
     campaign: detail.campaign ? {
-      id: detail.campaign.id, name: detail.campaign.name, status: detail.campaign.status,
-      end_date: detail.campaign.end_date, offer_details: detail.campaign.offer_details,
+      id: detail.campaign.id,
+      name: detail.campaign.name,
+      status: detail.campaign.status,
+      end_date: detail.campaign.end_date,
+      offer_details: detail.campaign.offer_details,
     } : null,
     destination: {
       platform_account_id: detail.account.id,
@@ -207,7 +213,11 @@ export async function createPublicationJob(input: {
   }).select('*').single();
   if (jobError) throw jobError;
   await input.supabase.from('publication_events').insert({
-    publication_job_id: job.id, next_status: 'scheduled', actor_id: input.userId, source: 'user', reason: 'Publication scheduled.',
+    publication_job_id: job.id,
+    next_status: 'scheduled',
+    actor_id: input.userId,
+    source: 'user',
+    reason: 'Publication scheduled.',
   });
   return { ...job, publication_snapshots: storedSnapshot };
 }
@@ -227,8 +237,11 @@ async function setRetry(service: SupabaseClient, job: Row, attempt: Row | null, 
   const decision = retryDecision(error.category, Number(job.attempt_count));
   const status = error.unknownResult ? 'verification_uncertain' : decision.retryable ? 'retry_waiting' : decision.terminalStatus;
   if (attempt) await service.from('publication_attempts').update({
-    provider_stage: 'failed', error_category: error.category, provider_error_code: error.providerCode,
-    safe_error_message: error.message, completed_at: new Date().toISOString(),
+    provider_stage: 'failed',
+    error_category: error.category,
+    provider_error_code: error.providerCode,
+    safe_error_message: error.message,
+    completed_at: new Date().toISOString(),
   }).eq('id', attempt.id);
   await service.from('publication_jobs').update({
     status,
@@ -257,7 +270,12 @@ async function completeVerified(service: SupabaseClient, input: { job: Row; acco
     verified_at: new Date().toISOString(),
     remote_snapshot: input.verification.remoteSnapshot,
   }, { onConflict: 'publication_job_id' });
-  await service.from('publication_attempts').update({ provider_stage: 'verified', remote_media_id: input.verification.mediaId, result: input.verification, completed_at: new Date().toISOString() }).eq('id', input.attempt.id);
+  await service.from('publication_attempts').update({
+    provider_stage: 'verified',
+    remote_media_id: input.verification.mediaId,
+    result: input.verification,
+    completed_at: new Date().toISOString(),
+  }).eq('id', input.attempt.id);
   await service.from('publication_jobs').update({ status: 'verified', safe_error_message: '', next_attempt_at: null }).eq('id', input.job.id);
   await service.from('publication_jobs').update({ status: 'completed', lock_token: null, locked_at: null }).eq('id', input.job.id);
   await service.from('platform_accounts').update({ publishing_tested_at: new Date().toISOString(), status: 'healthy' }).eq('id', input.accountId);
@@ -281,14 +299,19 @@ export async function dispatchPublicationJob(env: Env, jobId: string) {
   const priorResult = await service.from('publication_attempts').select('*').eq('publication_job_id', jobId).order('attempt_number', { ascending: false }).limit(1).maybeSingle();
   if (priorResult.error) throw priorResult.error;
   const { data: attempt, error: attemptError } = await service.from('publication_attempts').insert({
-    publication_job_id: jobId, attempt_number: job.attempt_count, provider_stage: 'preflight',
+    publication_job_id: jobId,
+    attempt_number: job.attempt_count,
+    provider_stage: 'preflight',
   }).select('*').single();
   if (attemptError) throw attemptError;
 
   try {
     const detail = await publicationPreflight({
-      supabase: service, contentId: storedSnapshot.content_item_id, platformAccountId: storedSnapshot.platform_account_id,
-      scheduledFor: job.scheduled_for, dispatchCheck: true,
+      supabase: service,
+      contentId: storedSnapshot.content_item_id,
+      platformAccountId: storedSnapshot.platform_account_id,
+      scheduledFor: job.scheduled_for,
+      dispatchCheck: true,
     });
     if (!detail.preflight.eligible) {
       await service.from('publication_attempts').update({ provider_stage: 'preflight_failed', result: detail.preflight, completed_at: new Date().toISOString() }).eq('id', attempt.id);
@@ -383,7 +406,9 @@ export async function reconcilePublicationJob(env: Env, jobId: string) {
   const attemptResult = await service.from('publication_attempts').select('*').eq('publication_job_id', jobId).not('remote_media_id', 'is', null).order('attempt_number', { ascending: false }).limit(1).maybeSingle();
   if (attemptResult.error) throw attemptResult.error;
   if (!attemptResult.data?.remote_media_id) return { reconciled: false, reason: 'No remote media ID is available. Automatic retry remains blocked to avoid duplication.' };
-  const { data: connection } = await service.from('platform_connections').select('id').eq('id', account.connection_id).single();
+  const { data: connection, error: connectionError } = await service.from('platform_connections').select('id').eq('id', account.connection_id).single();
+  if (connectionError) throw connectionError;
+  if (!connection) throw new ProviderError('The destination connection no longer exists.', 'authorization', 'CONNECTION_MISSING');
   const credential = await loadAccessToken(env, connection.id);
   const verification = await publishingProvider(env).verify(attemptResult.data.remote_media_id, credential.accessToken);
   if (verification.verified) {
