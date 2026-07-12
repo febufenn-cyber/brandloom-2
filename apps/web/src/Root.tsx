@@ -2,16 +2,17 @@ import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import App from './App';
 import OperationsApp from './OperationsApp';
+import PublishingApp from './PublishingApp';
 import { supabase } from './lib/supabase';
 
 export default function Root() {
   const [session, setSession] = useState<Session | null>(null);
-  const [route, setRoute] = useState(window.location.hash);
+  const [route, setRoute] = useState(window.location.hash.split('?')[0]);
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const auth = supabase.auth.onAuthStateChange((_event, next) => setSession(next));
-    const hash = () => setRoute(window.location.hash);
+    const hash = () => setRoute(window.location.hash.split('?')[0]);
     window.addEventListener('hashchange', hash);
     return () => {
       auth.data.subscription.unsubscribe();
@@ -20,8 +21,9 @@ export default function Root() {
   }, []);
 
   if (route === '#operations') return <OperationsApp onBack={() => { window.location.hash = ''; }} />;
+  if (route === '#publishing') return <PublishingApp onBack={() => { window.location.hash = ''; }} onOperations={() => { window.location.hash = 'operations'; }} />;
   return <>
     <App />
-    {session && <button className="operations-launch" onClick={() => { window.location.hash = 'operations'; }}>Open Operations</button>}
+    {session && <div className="app-launches"><button className="operations-launch" onClick={() => { window.location.hash = 'operations'; }}>Open Operations</button><button className="publishing-launch" onClick={() => { window.location.hash = 'publishing'; }}>Open Publishing</button></div>}
   </>;
 }
