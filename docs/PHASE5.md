@@ -15,7 +15,7 @@ Customers can understand their plan, subscribe, move through trial/active/grace/
 | Growth | 3 | 8 | 1,200 | 5 |
 | Agency | 15 | 30 | 5,000 | 25 |
 
-Plan limits and feature flags are stored in `billing_plans`; API authorization uses the latest immutable `entitlement_snapshots` projection rather than scattered plan-name checks.
+Plan limits and feature flags are stored in `billing_plans`; API authorization uses the latest immutable `entitlement_snapshots` projection rather than scattered plan-name checks. Postgres triggers enforce brand, accepted-member, connected-account and automatic-publishing limits so frontend bypasses cannot exceed the plan.
 
 ## Billing lifecycle
 
@@ -38,7 +38,7 @@ Generation routes pass through `commercialGuard` before the underlying Phase 1â€
 4. Finalize the reservation on success.
 5. Release it on failure.
 
-`usage_ledger` is append-only. Corrections must use reversal entries. `generation_runs` also create configurable `cost_events`; model prices remain zero until operators populate `model_cost_rates` with current contracted rates.
+`usage_ledger` is append-only during normal operation. Corrections must use reversal entries. Controlled workspace deletion can still cascade through usage history after the deletion workflow is approved. `generation_runs` also create configurable `cost_events`; model prices remain zero until operators populate `model_cost_rates` with current contracted rates.
 
 ## Stripe integration boundary
 
@@ -76,8 +76,9 @@ Apply in lexical order:
 1. `0001` through `0007`
 2. `0008_phase5_commercial.sql`
 3. `0009_phase5_integrity.sql`
+4. `0010_phase5_entitlement_enforcement.sql`
 
-Test the migrations against a disposable Supabase branch before production. In particular verify RLS, entitlement triggers, reservation concurrency, export size, deletion cooling, Stripe event replay and workspace cascades.
+Test the migrations against a disposable Supabase branch before production. In particular verify RLS, entitlement triggers, trial/owner trigger ordering, reservation concurrency, brand/member/account limits, export size, deletion cooling, Stripe event replay and workspace cascades.
 
 ## Environment
 
@@ -106,8 +107,9 @@ STRIPE_CANCEL_URL=https://app.example.com/#commercial?checkout=cancelled
 - Concurrent generation cannot exceed the available allowance.
 - Failed generation releases reservations.
 - Payment failures enter grace/read-only states without deleting data.
+- Plan limits are enforced in Postgres, not only in UI controls.
 - Downgrades preserve excess data for explicit archival decisions.
-- Usage history is immutable and customer-visible.
+- Usage history is immutable during operation and customer-visible.
 - Customer export is checksum-backed and expires.
 - Deletion has a cooling period and auditable state.
 - Mock mode can exercise checkout and entitlement changes without Stripe credentials.
