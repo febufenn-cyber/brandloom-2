@@ -4,6 +4,7 @@ import App from './App';
 import OperationsApp from './OperationsApp';
 import PublishingApp from './PublishingApp';
 import CommercialApp from './CommercialApp';
+import OptimizationApp from './OptimizationApp';
 import { supabase } from './lib/supabase';
 
 export default function Root() {
@@ -24,8 +25,9 @@ export default function Root() {
   if (route === '#operations') return <OperationsApp onBack={() => { window.location.hash = ''; }} />;
   if (route === '#publishing') return <PublishingApp onBack={() => { window.location.hash = ''; }} onOperations={() => { window.location.hash = 'operations'; }} />;
   if (route === '#commercial') return <CommercialApp onBack={() => { window.location.hash = ''; }} onOperations={() => { window.location.hash = 'operations'; }} onPublishing={() => { window.location.hash = 'publishing'; }} />;
+  if (route === '#optimization') return <OptimizationApp onBack={() => { window.location.hash = ''; }} onOperations={() => { window.location.hash = 'operations'; }} onPublishing={() => { window.location.hash = 'publishing'; }} onCommercial={() => { window.location.hash = 'commercial'; }} />;
   return <>
     <App />
-    {session && <div className="app-launches"><button className="operations-launch" onClick={() => { window.location.hash = 'operations'; }}>Open Operations</button><button className="publishing-launch" onClick={() => { window.location.hash = 'publishing'; }}>Open Publishing</button><button className="commercial-launch" onClick={() => { window.location.hash = 'commercial'; }}>Open Commercial</button></div>}
+    {session && <div className="app-launches"><button className="operations-launch" onClick={() => { window.location.hash = 'operations'; }}>Open Operations</button><button className="publishing-launch" onClick={() => { window.location.hash = 'publishing'; }}>Open Publishing</button><button className="commercial-launch" onClick={() => { window.location.hash = 'commercial'; }}>Open Commercial</button><button className="optimization-launch" onClick={() => { window.location.hash = 'optimization'; }}>Open Optimization</button></div>}
   </>;
 }

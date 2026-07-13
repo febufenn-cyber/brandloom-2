@@ -5,6 +5,7 @@ import './styles.css';
 import './operations.css';
 import './publishing.css';
 import './commercial.css';
+import './optimization.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
