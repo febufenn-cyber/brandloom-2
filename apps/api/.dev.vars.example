@@ -9,8 +9,17 @@ WEB_ORIGIN=http://localhost:5173
 TOKEN_ENCRYPTION_KEY=BASE64_ENCODED_32_BYTE_KEY
 CRON_SECRET=LONG_RANDOM_INTERNAL_DISPATCH_SECRET
 
-# Safe local mode exercises the full publishing state machine without touching Meta.
+# Safe local modes exercise state machines without touching live providers.
 PUBLISHING_PROVIDER_MODE=mock
+BILLING_PROVIDER_MODE=mock
+
+# Required when BILLING_PROVIDER_MODE=stripe
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+STRIPE_API_BASE=https://api.stripe.com
+STRIPE_API_VERSION=
+STRIPE_SUCCESS_URL=http://localhost:5173/#commercial?checkout=success
+STRIPE_CANCEL_URL=http://localhost:5173/#commercial?checkout=cancelled
 
 # Required when PUBLISHING_PROVIDER_MODE=meta
 META_APP_ID=

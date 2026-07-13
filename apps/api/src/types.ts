@@ -21,6 +21,13 @@ export type Env = {
   META_REQUIRED_SCOPES?: string;
   META_OAUTH_USE_PKCE?: string;
   META_WEBHOOK_VERIFY_TOKEN?: string;
+  BILLING_PROVIDER_MODE?: 'mock' | 'stripe';
+  STRIPE_SECRET_KEY?: string;
+  STRIPE_WEBHOOK_SECRET?: string;
+  STRIPE_API_BASE?: string;
+  STRIPE_API_VERSION?: string;
+  STRIPE_SUCCESS_URL?: string;
+  STRIPE_CANCEL_URL?: string;
 };
 
 export type Variables = {

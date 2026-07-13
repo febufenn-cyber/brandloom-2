@@ -5,12 +5,14 @@ compatibility_date = "2025-03-03"
 [vars]
 WEB_ORIGIN = "http://localhost:5173"
 PUBLISHING_PROVIDER_MODE = "mock"
+BILLING_PROVIDER_MODE = "mock"
 META_OAUTH_USE_PKCE = "true"
 
 [triggers]
 crons = ["* * * * *"]
 
-# Configure SUPABASE_URL, SUPABASE_ANON_KEY, ANTHROPIC_MODEL and current Meta endpoint values.
+# Configure SUPABASE_URL, SUPABASE_ANON_KEY, ANTHROPIC_MODEL and current provider endpoint values.
 # Store these with `wrangler secret put`:
 # SUPABASE_SERVICE_ROLE_KEY, ANTHROPIC_API_KEY, TOKEN_ENCRYPTION_KEY,
-# CRON_SECRET, META_APP_SECRET and META_WEBHOOK_VERIFY_TOKEN.
+# CRON_SECRET, META_APP_SECRET, META_WEBHOOK_VERIFY_TOKEN,
+# STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET.
