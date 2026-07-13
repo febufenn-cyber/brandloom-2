@@ -51,7 +51,7 @@ export default function OptimizationApp({ onBack, onOperations, onPublishing, on
   const [opportunity, setOpportunity] = useState({ title: '', description: '', signalType: 'campaign', validUntil: '' });
 
   const refresh = async () => {
-    const boot = await api<{ brand: Brand | null; plans?: Array<{ id: string }> }>('/api/bootstrap');
+    const boot = await api<{ brand: Brand | null }>('/api/bootstrap');
     setBrand(boot.brand);
     if (!boot.brand) return;
     const [nextDashboard, plans] = await Promise.all([
@@ -69,15 +69,16 @@ export default function OptimizationApp({ onBack, onOperations, onPublishing, on
   useEffect(() => { void refresh().catch((reason) => setError(reason instanceof Error ? reason.message : String(reason))); }, []);
 
   useEffect(() => {
-    if (!content.length || importText) return;
+    const firstContent = content[0];
+    if (!firstContent || importText) return;
     const now = new Date();
     const start = new Date(now.getTime() - 7 * 86_400_000);
     setImportText(JSON.stringify({
       source: 'manual',
       external_batch_id: `manual-${now.toISOString().slice(0, 10)}`,
       rows: [{
-        content_item_id: content[0].id,
-        source_event_id: `manual-${content[0].id}-${now.toISOString().slice(0, 10)}`,
+        content_item_id: firstContent.id,
+        source_event_id: `manual-${firstContent.id}-${now.toISOString().slice(0, 10)}`,
         window_start: start.toISOString(), window_end: now.toISOString(), observed_at: now.toISOString(),
         impressions: 0, reach: 0, likes: 0, comments: 0, saves: 0, shares: 0,
         clicks: 0, profile_visits: 0, follows: 0, video_views: 0, watch_time_seconds: 0,
