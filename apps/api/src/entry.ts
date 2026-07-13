@@ -10,6 +10,7 @@ import phase6 from './phase6';
 import phase6Export from './phase6Export';
 import { commercialGuard } from './commercialGuard';
 import { commercialHousekeeping } from './commercialService';
+import { optimizationExperimentGuard } from './optimizationGuard';
 import { optimizationHousekeeping } from './optimizationService';
 import { dispatchDuePublications } from './publicationService';
 import type { Env, Variables } from './types';
@@ -18,6 +19,7 @@ app.route('/api', phase2);
 app.route('/api', phase3);
 app.route('/api', phase4);
 app.route('/api', phase5);
+app.use('/api/v6/experiments/*', optimizationExperimentGuard);
 app.route('/api', phase6);
 app.route('/api', phase6Export);
 
