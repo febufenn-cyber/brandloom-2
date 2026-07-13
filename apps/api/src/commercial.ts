@@ -42,10 +42,13 @@ export function generationChargeForRequest(method: string, path: string): Genera
   return generationRules.find((rule) => rule.method === normalizedMethod && rule.pattern.test(path))?.charge ?? null;
 }
 
-export function parseStripeSignature(header: string) {
+export function parseStripeSignature(header: string): { timestamp: number; signatures: string[] } {
   const values = header.split(',').map((item) => item.trim().split('='));
   const timestamp = values.find(([key]) => key === 't')?.[1];
-  const signatures = values.filter(([key]) => key === 'v1').map(([, value]) => value).filter(Boolean);
+  const signatures = values
+    .filter(([key]) => key === 'v1')
+    .map(([, value]) => value)
+    .filter((value): value is string => typeof value === 'string' && value.length > 0);
   return { timestamp: timestamp ? Number(timestamp) : NaN, signatures };
 }
 
