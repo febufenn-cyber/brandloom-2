@@ -33,8 +33,10 @@ describe('Phase 6 optimization safeguards', () => {
 
   it('requests more measurement for a small observational sample', () => {
     const insights = buildOptimizationInsights([sample(0), sample(1), sample(2)]);
-    expect(insights.recommendations[0].type).toBe('measurement');
-    expect(insights.recommendations[0].attributionConfidence).toBe('low');
+    const first = insights.recommendations[0];
+    expect(first).toBeDefined();
+    expect(first?.type).toBe('measurement');
+    expect(first?.attributionConfidence).toBe('low');
   });
 
   it('caps non-randomized confidence below causal confidence', () => {
