@@ -4,9 +4,9 @@ export type AccessState = 'full' | 'grace' | 'read_only' | 'closed';
 export type BillingStatus = 'trialing' | 'active' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'unpaid' | 'paused' | 'canceled';
 
 export const PLAN_CATALOG = [
-  { code: 'solo', name: 'Solo', description: 'For one founder or small business.', monthly_amount: 1900, currency: 'usd', features: ['Brand memory', 'Approvals', 'Automatic publishing'], limits: { brands: 1, members: 2, monthly_generation_units: 300, connected_accounts: 1 } },
-  { code: 'growth', name: 'Growth', description: 'For active small-business marketing teams.', monthly_amount: 5900, currency: 'usd', features: ['Everything in Solo', 'Client review links', 'Priority support'], limits: { brands: 3, members: 8, monthly_generation_units: 1200, connected_accounts: 5 } },
-  { code: 'agency', name: 'Agency', description: 'For consultants and multi-client teams.', monthly_amount: 14900, currency: 'usd', features: ['Everything in Growth', 'Agency reporting', 'Multi-client scale'], limits: { brands: 15, members: 30, monthly_generation_units: 5000, connected_accounts: 25 } },
+  { code: 'solo', name: 'Solo', description: 'For one founder or small business.', monthly_amount: 1900, currency: 'usd', features: ['Brand memory', 'Approvals', 'Automatic publishing', 'Optimization dashboard'], limits: { brands: 1, members: 2, monthly_generation_units: 300, connected_accounts: 1 } },
+  { code: 'growth', name: 'Growth', description: 'For active small-business marketing teams.', monthly_amount: 5900, currency: 'usd', features: ['Everything in Solo', 'Intelligent optimization', 'Controlled experiments', 'Client review links', 'Priority support'], limits: { brands: 3, members: 8, monthly_generation_units: 1200, connected_accounts: 5 } },
+  { code: 'agency', name: 'Agency', description: 'For consultants and multi-client teams.', monthly_amount: 14900, currency: 'usd', features: ['Everything in Growth', 'Intelligent optimization', 'Controlled experiments', 'Agency reporting', 'Multi-client scale'], limits: { brands: 15, members: 30, monthly_generation_units: 5000, connected_accounts: 25 } },
 ] as const;
 
 export function billingAccessState(status: BillingStatus, graceEndsAt?: string | null, now = new Date()): AccessState {
