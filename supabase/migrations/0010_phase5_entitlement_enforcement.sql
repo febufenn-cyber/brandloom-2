@@ -1,5 +1,9 @@
 -- Brandloom Phase 5 entitlement enforcement at the database boundary
 
+-- PostgreSQL runs same-timing triggers in name order. Provision the trial and its
+-- entitlement before the existing owner-membership trigger inserts the first member.
+alter trigger workspace_trial_after_insert on public.workspaces rename to a_workspace_trial_after_insert;
+
 -- Usage history is immutable during normal operation, but workspace deletion must be
 -- allowed to cascade through the ledger. RLS prevents end-user deletes.
 drop trigger if exists usage_ledger_immutable_delete on public.usage_ledger;
