@@ -28,6 +28,10 @@ export type Env = {
   STRIPE_API_VERSION?: string;
   STRIPE_SUCCESS_URL?: string;
   STRIPE_CANCEL_URL?: string;
+  DEPLOYMENT_ENVIRONMENT?: 'local' | 'staging' | 'production';
+  APP_VERSION?: string;
+  COMMIT_SHA?: string;
+  EXPECTED_MIGRATION_VERSION?: string;
 };
 
 export type Variables = {

@@ -1,0 +1,58 @@
+name: Release readiness
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      version:
+        description: Immutable release version
+        required: true
+        type: string
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-readiness-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_ENVIRONMENT: ${{ github.event.inputs.environment || 'production' }}
+      RELEASE_VERSION: ${{ github.event.inputs.version || github.ref_name }}
+      RELEASE_COMMIT: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile=false
+      - name: Validate and build
+        run: pnpm check
+      - name: Create immutable release manifest
+        run: pnpm run release:manifest -- --environment "$RELEASE_ENVIRONMENT" --version "$RELEASE_VERSION" --commit "$RELEASE_COMMIT"
+      - name: Publish release evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: brandloom-${{ env.RELEASE_VERSION }}-${{ env.RELEASE_ENVIRONMENT }}
+          path: |
+            release-manifest.json
+            apps/api/dist
+            apps/web/dist
+          if-no-files-found: error
+          retention-days: 30

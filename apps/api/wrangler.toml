@@ -7,10 +7,16 @@ WEB_ORIGIN = "http://localhost:5173"
 PUBLISHING_PROVIDER_MODE = "mock"
 BILLING_PROVIDER_MODE = "mock"
 META_OAUTH_USE_PKCE = "true"
+DEPLOYMENT_ENVIRONMENT = "local"
+APP_VERSION = "development"
+COMMIT_SHA = "local"
+EXPECTED_MIGRATION_VERSION = "0015"
 
 [triggers]
 crons = ["* * * * *"]
 
+# Staging and production must override DEPLOYMENT_ENVIRONMENT, APP_VERSION,
+# COMMIT_SHA, WEB_ORIGIN and provider modes in their environment configuration.
 # Configure SUPABASE_URL, SUPABASE_ANON_KEY, ANTHROPIC_MODEL and current provider endpoint values.
 # Store these with `wrangler secret put`:
 # SUPABASE_SERVICE_ROLE_KEY, ANTHROPIC_API_KEY, TOKEN_ENCRYPTION_KEY,
