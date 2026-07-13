@@ -7,6 +7,7 @@ import phase4Public from './phase4Public';
 import phase5 from './phase5';
 import phase5Public from './phase5Public';
 import phase6 from './phase6';
+import phase6Export from './phase6Export';
 import { commercialGuard } from './commercialGuard';
 import { commercialHousekeeping } from './commercialService';
 import { optimizationHousekeeping } from './optimizationService';
@@ -18,6 +19,7 @@ app.route('/api', phase3);
 app.route('/api', phase4);
 app.route('/api', phase5);
 app.route('/api', phase6);
+app.route('/api', phase6Export);
 
 const root = new Hono<{ Bindings: Env; Variables: Variables }>();
 root.route('/', phase4Public);
