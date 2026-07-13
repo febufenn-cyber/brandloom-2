@@ -43,6 +43,23 @@ export type ReleaseGate = {
   summary?: string;
 };
 
+const gateKeys = new Set<string>(ALL_RELEASE_GATES);
+const gateStatuses = new Set<string>(['pending', 'passed', 'failed', 'waived']);
+
+function normalizeReleaseGate(value: unknown): ReleaseGate | null {
+  if (!value || typeof value !== 'object') return null;
+  const row = value as Record<string, unknown>;
+  const gateKey = typeof row.gate_key === 'string' && gateKeys.has(row.gate_key) ? row.gate_key as GateKey : null;
+  const status = typeof row.status === 'string' && gateStatuses.has(row.status) ? row.status as GateStatus : null;
+  if (!gateKey || !status) return null;
+  return {
+    gate_key: gateKey,
+    status,
+    expires_at: typeof row.expires_at === 'string' ? row.expires_at : null,
+    summary: typeof row.summary === 'string' ? row.summary : '',
+  };
+}
+
 export function gateIsCurrent(gate: ReleaseGate, now = new Date()) {
   if (!['passed', 'waived'].includes(gate.status)) return false;
   if (!gate.expires_at) return true;
@@ -51,10 +68,11 @@ export function gateIsCurrent(gate: ReleaseGate, now = new Date()) {
 
 export function evaluateReleaseReadiness(
   environment: DeploymentEnvironment,
-  gates: ReleaseGate[],
+  gateRows: readonly unknown[],
   now = new Date(),
 ) {
   const required = requiredReleaseGates(environment);
+  const gates = gateRows.map(normalizeReleaseGate).filter((gate): gate is ReleaseGate => gate !== null);
   const byKey = new Map(gates.map((gate) => [gate.gate_key, gate]));
   const results = required.map((gateKey) => {
     const gate = byKey.get(gateKey);
