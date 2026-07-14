@@ -10,6 +10,8 @@ export type Env = {
   ANTHROPIC_API_VERSION?: string;
   WEB_ORIGIN?: string;
   PUBLIC_API_ORIGIN?: string;
+  BETA_APP_ORIGIN?: string;
+  RATE_LIMIT_SALT?: string;
   TOKEN_ENCRYPTION_KEY: string;
   PUBLISHING_PROVIDER_MODE?: 'mock' | 'meta';
   CRON_SECRET?: string;

@@ -1,0 +1,38 @@
+name: Security and beta QA
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'apps/**'
+      - 'supabase/migrations/**'
+      - 'scripts/security-static-check.mjs'
+      - 'scripts/create-beta-qa-manifest.mjs'
+      - '.github/workflows/security-qa.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm security:check
+      - run: pnpm check
+      - run: pnpm beta:manifest
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brandloom-beta-qa-${{ github.sha }}
+          path: |
+            security-static-report.json
+            beta-qa-manifest.json
+          if-no-files-found: error
+          retention-days: 30

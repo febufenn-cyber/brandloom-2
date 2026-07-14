@@ -11,6 +11,8 @@
     "release:manifest": "node scripts/create-release-manifest.mjs",
     "activation:validate": "node scripts/validate-activation-config.mjs",
     "activation:smoke": "node scripts/smoke-environment.mjs",
-    "check": "pnpm release:validate && pnpm typecheck && pnpm test && pnpm build"
+    "security:check": "node scripts/security-static-check.mjs",
+    "beta:manifest": "node scripts/create-beta-qa-manifest.mjs",
+    "check": "pnpm release:validate && pnpm security:check && pnpm typecheck && pnpm test && pnpm build"
   }
 }
