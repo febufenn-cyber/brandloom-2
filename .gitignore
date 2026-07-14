@@ -9,3 +9,5 @@ dist/
 coverage/
 *.tsbuildinfo
 release-manifest.json
+activation-preflight.json
+deployment-smoke.json
