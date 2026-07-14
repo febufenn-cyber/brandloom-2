@@ -6,7 +6,10 @@ export type Env = {
   SUPABASE_SERVICE_ROLE_KEY: string;
   ANTHROPIC_API_KEY: string;
   ANTHROPIC_MODEL: string;
+  ANTHROPIC_API_BASE?: string;
+  ANTHROPIC_API_VERSION?: string;
   WEB_ORIGIN?: string;
+  PUBLIC_API_ORIGIN?: string;
   TOKEN_ENCRYPTION_KEY: string;
   PUBLISHING_PROVIDER_MODE?: 'mock' | 'meta';
   CRON_SECRET?: string;
