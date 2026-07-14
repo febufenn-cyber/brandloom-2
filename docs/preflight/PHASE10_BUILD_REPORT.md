@@ -8,9 +8,9 @@
 - Lifecycle messages sent: no
 - External purchases performed: no
 - Required migration target: `0022`
-- Pull request: pending
-- CI status: pending
-- Merge commit: pending
-- Main verification: pending
+- Pull request: `#10`
+- Validation: full CI, security/beta QA evidence and public-launch readiness workflows passed before finalization
+- Merge commit: recorded by GitHub on PR `#10`
+- Main verification: compare `main` to the merge commit after merge; the final autonomous build report records the result
 
-The final autonomous build report records the PR, validation workflows, merge SHA and exact `main` comparison after completion.
+The repository report intentionally does not claim deployment, live registration, messaging delivery or commercial growth outcomes.
