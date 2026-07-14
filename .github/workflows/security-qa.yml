@@ -19,9 +19,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with: { version: 9.15.4 }
+        with:
+          version: 9.15.4
       - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: pnpm }
+        with:
+          node-version: 22
       - run: pnpm install --frozen-lockfile=false
       - run: pnpm security:check
       - run: pnpm check
