@@ -12,9 +12,13 @@ import phase7 from './phase7';
 import phase7Public from './phase7Public';
 import phase8 from './phase8';
 import phase9 from './phase9';
+import phase10 from './phase10';
+import phase10Public from './phase10Public';
+import phase10Secure from './phase10Secure';
 import { betaHousekeeping } from './betaService';
 import { commercialGuard } from './commercialGuard';
 import { commercialHousekeeping } from './commercialService';
+import { growthHousekeeping } from './growthService';
 import { optimizationExperimentGuard } from './optimizationGuard';
 import { optimizationHousekeeping } from './optimizationService';
 import { dispatchDuePublications } from './publicationService';
@@ -33,12 +37,16 @@ app.route('/api', phase6Export);
 app.route('/api', phase7);
 app.route('/api', phase8);
 app.route('/api', phase9);
+app.route('/api', phase10Secure);
+app.route('/api', phase10);
 
 const root = new Hono<{ Bindings: Env; Variables: Variables }>();
 root.use('*', securityHeaders);
+root.use('/public/*', apiRateLimitGuard);
 root.route('/', phase4Public);
 root.route('/', phase5Public);
 root.route('/', phase7Public);
+root.route('/', phase10Public);
 root.use('/api/*', apiRateLimitGuard);
 root.use('/api/*', reliabilityGuard);
 root.use('/api/*', commercialGuard);
@@ -53,6 +61,7 @@ export default {
       optimizationHousekeeping(env),
       reliabilityHousekeeping(env),
       betaHousekeeping(env),
+      growthHousekeeping(env),
     ]));
   },
 } satisfies ExportedHandler<Env>;

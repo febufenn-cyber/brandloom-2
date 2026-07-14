@@ -9,6 +9,8 @@ import './optimization.css';
 import './reliability.css';
 import './activation.css';
 import './beta.css';
+import './launch.css';
+import './public-access.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -13,6 +13,7 @@
     "activation:smoke": "node scripts/smoke-environment.mjs",
     "security:check": "node scripts/security-static-check.mjs",
     "beta:manifest": "node scripts/create-beta-qa-manifest.mjs",
+    "launch:manifest": "node scripts/create-launch-readiness-manifest.mjs",
     "check": "pnpm release:validate && pnpm security:check && pnpm typecheck && pnpm test && pnpm build"
   }
 }

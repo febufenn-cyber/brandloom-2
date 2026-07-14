@@ -13,3 +13,4 @@ activation-preflight.json
 deployment-smoke.json
 security-static-report.json
 beta-qa-manifest.json
+launch-readiness-manifest.json
