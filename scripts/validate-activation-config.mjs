@@ -7,11 +7,10 @@ if (!['staging', 'production'].includes(environment)) throw new Error('Use --env
 const required = [
   'SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY',
   'ANTHROPIC_API_KEY', 'ANTHROPIC_MODEL', 'TOKEN_ENCRYPTION_KEY', 'RATE_LIMIT_SALT', 'CRON_SECRET',
-  'WEB_ORIGIN', 'PUBLIC_API_ORIGIN', 'BETA_APP_ORIGIN', 'META_APP_ID', 'META_APP_SECRET',
-  'META_REDIRECT_URI', 'META_WEBHOOK_VERIFY_TOKEN', 'STRIPE_SECRET_KEY',
-  'STRIPE_WEBHOOK_SECRET', 'STRIPE_SUCCESS_URL', 'STRIPE_CANCEL_URL',
-  'CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID', 'CLOUDFLARE_PAGES_PROJECT',
-  'SUPABASE_DB_URL',
+  'WEB_ORIGIN', 'PUBLIC_API_ORIGIN', 'BETA_APP_ORIGIN', 'WAITLIST_CONSENT_VERSION',
+  'META_APP_ID', 'META_APP_SECRET', 'META_REDIRECT_URI', 'META_WEBHOOK_VERIFY_TOKEN',
+  'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'STRIPE_SUCCESS_URL', 'STRIPE_CANCEL_URL',
+  'CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID', 'CLOUDFLARE_PAGES_PROJECT', 'SUPABASE_DB_URL',
 ];
 
 const missing = required.filter((key) => !process.env[key]?.trim());
@@ -33,6 +32,7 @@ if (environment === 'staging' && !stripeKey.startsWith('sk_test_')) errors.push(
 if ((process.env.PUBLISHING_PROVIDER_MODE ?? 'meta') !== 'meta') errors.push('Publishing provider mode must be meta.');
 if ((process.env.BILLING_PROVIDER_MODE ?? 'stripe') !== 'stripe') errors.push('Billing provider mode must be stripe.');
 if ((process.env.RATE_LIMIT_SALT ?? '').length < 32) errors.push('RATE_LIMIT_SALT must contain at least 32 characters.');
+if ((process.env.WAITLIST_CONSENT_VERSION ?? '').length > 80) errors.push('WAITLIST_CONSENT_VERSION must be at most 80 characters.');
 
 const migrationDir = path.resolve('supabase/migrations');
 const versions = fs.readdirSync(migrationDir).filter((name) => /^\d{4}_.+\.sql$/.test(name)).map((name) => name.slice(0, 4)).sort();
@@ -57,7 +57,11 @@ const output = {
     api: process.env.PUBLIC_API_ORIGIN ? new URL(process.env.PUBLIC_API_ORIGIN).origin : null,
     beta: process.env.BETA_APP_ORIGIN ? new URL(process.env.BETA_APP_ORIGIN).origin : null,
   },
-  safety: { rate_limit_salt_configured: Boolean(process.env.RATE_LIMIT_SALT), rate_limit_salt_length_valid: (process.env.RATE_LIMIT_SALT ?? '').length >= 32 },
+  safety: {
+    rate_limit_salt_configured: Boolean(process.env.RATE_LIMIT_SALT),
+    rate_limit_salt_length_valid: (process.env.RATE_LIMIT_SALT ?? '').length >= 32,
+    waitlist_consent_version: process.env.WAITLIST_CONSENT_VERSION ?? null,
+  },
   ready: errors.length === 0,
 };
 fs.writeFileSync('activation-preflight.json', `${JSON.stringify(output, null, 2)}\n`);
