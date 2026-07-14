@@ -1,0 +1,177 @@
+name: Deploy environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: GitHub and Brandloom environment
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      version:
+        description: Immutable release version
+        required: true
+        type: string
+      confirmation:
+        description: Type DEPLOY STAGING or DEPLOY PRODUCTION
+        required: true
+        type: string
+      apply_migrations:
+        description: Apply pending Supabase migrations before deployment
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  deployments: write
+
+concurrency:
+  group: brandloom-deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      TARGET_ENV: ${{ inputs.environment }}
+      RELEASE_VERSION: ${{ inputs.version }}
+      RELEASE_COMMIT: ${{ github.sha }}
+      DEPLOYMENT_ENVIRONMENT: ${{ inputs.environment }}
+      EXPECTED_MIGRATION_VERSION: "0017"
+      PUBLISHING_PROVIDER_MODE: meta
+      BILLING_PROVIDER_MODE: stripe
+      SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
+      ANTHROPIC_API_VERSION: ${{ vars.ANTHROPIC_API_VERSION }}
+      TOKEN_ENCRYPTION_KEY: ${{ secrets.TOKEN_ENCRYPTION_KEY }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      WEB_ORIGIN: ${{ vars.WEB_ORIGIN }}
+      PUBLIC_API_ORIGIN: ${{ vars.PUBLIC_API_ORIGIN }}
+      META_APP_ID: ${{ vars.META_APP_ID }}
+      META_APP_SECRET: ${{ secrets.META_APP_SECRET }}
+      META_REDIRECT_URI: ${{ vars.META_REDIRECT_URI }}
+      META_WEBHOOK_VERIFY_TOKEN: ${{ secrets.META_WEBHOOK_VERIFY_TOKEN }}
+      META_REQUIRED_SCOPES: ${{ vars.META_REQUIRED_SCOPES }}
+      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+      STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+      STRIPE_API_VERSION: ${{ vars.STRIPE_API_VERSION }}
+      STRIPE_SUCCESS_URL: ${{ vars.STRIPE_SUCCESS_URL }}
+      STRIPE_CANCEL_URL: ${{ vars.STRIPE_CANCEL_URL }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_PAGES_PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT }}
+      CLOUDFLARE_PAGES_BRANCH: ${{ vars.CLOUDFLARE_PAGES_BRANCH }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify explicit deployment confirmation
+        shell: bash
+        run: |
+          expected="DEPLOY ${TARGET_ENV^^}"
+          if [ "${{ inputs.confirmation }}" != "$expected" ]; then
+            echo "Deployment confirmation must equal: $expected"
+            exit 1
+          fi
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm check
+
+      - name: Validate environment activation configuration
+        run: pnpm activation:validate -- --environment="$TARGET_ENV"
+
+      - name: Create immutable release manifest
+        run: pnpm release:manifest -- --environment "$TARGET_ENV" --version "$RELEASE_VERSION" --commit "$RELEASE_COMMIT"
+
+      - name: Apply Supabase migrations
+        if: ${{ inputs.apply_migrations }}
+        run: npx --yes supabase@2 db push --db-url "$SUPABASE_DB_URL"
+
+      - name: Synchronize Worker secrets
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const names = [
+            'SUPABASE_SERVICE_ROLE_KEY', 'ANTHROPIC_API_KEY', 'TOKEN_ENCRYPTION_KEY',
+            'CRON_SECRET', 'META_APP_SECRET', 'META_WEBHOOK_VERIFY_TOKEN',
+            'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET'
+          ];
+          const values = Object.fromEntries(names.map((name) => [name, process.env[name]]));
+          fs.writeFileSync('/tmp/brandloom-worker-secrets.json', JSON.stringify(values));
+          NODE
+          pnpm --dir apps/api exec wrangler secret bulk /tmp/brandloom-worker-secrets.json --env "$TARGET_ENV"
+          rm -f /tmp/brandloom-worker-secrets.json
+
+      - name: Deploy Cloudflare Worker
+        shell: bash
+        run: |
+          pnpm --dir apps/api exec wrangler deploy --env "$TARGET_ENV" \
+            --var "WEB_ORIGIN:$WEB_ORIGIN" \
+            --var "PUBLIC_API_ORIGIN:$PUBLIC_API_ORIGIN" \
+            --var "APP_VERSION:$RELEASE_VERSION" \
+            --var "COMMIT_SHA:$RELEASE_COMMIT" \
+            --var "EXPECTED_MIGRATION_VERSION:$EXPECTED_MIGRATION_VERSION" \
+            --var "SUPABASE_URL:$SUPABASE_URL" \
+            --var "SUPABASE_ANON_KEY:$SUPABASE_ANON_KEY" \
+            --var "ANTHROPIC_MODEL:$ANTHROPIC_MODEL" \
+            --var "ANTHROPIC_API_VERSION:${ANTHROPIC_API_VERSION:-2023-06-01}" \
+            --var "META_APP_ID:$META_APP_ID" \
+            --var "META_REDIRECT_URI:$META_REDIRECT_URI" \
+            --var "META_REQUIRED_SCOPES:$META_REQUIRED_SCOPES" \
+            --var "STRIPE_API_VERSION:$STRIPE_API_VERSION" \
+            --var "STRIPE_SUCCESS_URL:$STRIPE_SUCCESS_URL" \
+            --var "STRIPE_CANCEL_URL:$STRIPE_CANCEL_URL"
+
+      - name: Build web application for target environment
+        env:
+          VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+          VITE_API_URL: ${{ vars.PUBLIC_API_ORIGIN }}
+        run: pnpm --filter @brandloom/web build
+
+      - name: Deploy Cloudflare Pages
+        shell: bash
+        run: |
+          deploy_branch="${CLOUDFLARE_PAGES_BRANCH:-$TARGET_ENV}"
+          pnpm --dir apps/api exec wrangler pages deploy ../web/dist \
+            --project-name "$CLOUDFLARE_PAGES_PROJECT" \
+            --branch "$deploy_branch"
+
+      - name: Pre-promotion smoke test
+        env:
+          ALLOW_NOT_READY: "true"
+        run: pnpm activation:smoke -- --environment="$TARGET_ENV"
+
+      - name: Upload deployment evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: brandloom-deployment-${{ inputs.environment }}-${{ inputs.version }}
+          path: |
+            activation-preflight.json
+            release-manifest.json
+            deployment-smoke.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Deployment boundary summary
+        run: |
+          echo "Code and migrations were deployed to $TARGET_ENV."
+          echo "This workflow does not validate or promote the release in Brandloom."
+          echo "Run Phase 7 release gates, promote the release, then run Phase 8 activation checks."

@@ -9,6 +9,8 @@
     "test": "pnpm -r test",
     "release:validate": "node scripts/validate-release.mjs",
     "release:manifest": "node scripts/create-release-manifest.mjs",
+    "activation:validate": "node scripts/validate-activation-config.mjs",
+    "activation:smoke": "node scripts/smoke-environment.mjs",
     "check": "pnpm release:validate && pnpm typecheck && pnpm test && pnpm build"
   }
 }
