@@ -10,7 +10,25 @@ async function body<Schema extends z.ZodTypeAny>(c: Context, schema: Schema): Pr
   return schema.parse(await c.req.json()) as z.output<Schema>;
 }
 
+async function sha256(value: string) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
 publicGrowth.get('/public/v10/status', async (c) => c.json(await publicLaunchStatus(c.env)));
+
+publicGrowth.post('/public/v10/beta-invite', async (c) => {
+  const input = await body(c, z.object({ token: z.string().min(32).max(500) }));
+  const service = createServiceClient(c.env);
+  const tokenHash = await sha256(input.token);
+  const invite = await service.from('beta_invites').select('id,program_id,status,expires_at').eq('token_hash', tokenHash).maybeSingle();
+  if (invite.error) throw invite.error;
+  if (!invite.data || invite.data.status !== 'pending' || new Date(invite.data.expires_at) <= new Date()) return c.json({ valid: false }, 404);
+  const program = await service.from('beta_programs').select('name,consent_version,status').eq('id', invite.data.program_id).single();
+  if (program.error) throw program.error;
+  const valid = ['recruiting','active'].includes(program.data.status);
+  return c.json({ valid, program_name: program.data.name, consent_version: program.data.consent_version, expires_at: invite.data.expires_at, status: invite.data.status });
+});
 
 publicGrowth.post('/public/v10/waitlist', async (c) => {
   const input = await body(c, z.object({
@@ -22,6 +40,9 @@ publicGrowth.post('/public/v10/waitlist', async (c) => {
     referral_code: z.string().max(20).optional(),
     metadata: z.unknown().optional(),
   }));
+  const expectedConsent = c.env.WAITLIST_CONSENT_VERSION;
+  if (!expectedConsent && (c.env.DEPLOYMENT_ENVIRONMENT ?? 'local') === 'production') return c.json({ error: 'Waitlist consent configuration is unavailable.' }, 503);
+  if (expectedConsent && input.consent_version !== expectedConsent) return c.json({ error: 'The waitlist terms changed. Reload and accept the current version.' }, 409);
   return c.json(await joinWaitlist(c.env, {
     email: input.email,
     consentVersion: input.consent_version,
