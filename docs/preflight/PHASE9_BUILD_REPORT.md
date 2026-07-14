@@ -7,9 +7,9 @@
 - External penetration test claimed: no
 - Public registration opened: no
 - Required migration target: `0019`
-- Pull request: pending
-- CI status: pending
-- Merge commit: pending
-- Main verification: pending
+- Pull request: `#9`
+- Validation: full repository CI and independent security/beta QA evidence workflow passed before merge
+- Merge commit: recorded by GitHub on PR `#9`
+- Main verification: compare `main` to the merge commit after merge; the final autonomous build report records the result
 
-The final autonomous build report records the PR, CI, merge SHA and exact `main` comparison after completion.
+The repository report intentionally does not claim external security certification, a live beta, participant enrollment or public access.
