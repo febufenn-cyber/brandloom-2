@@ -1,0 +1,40 @@
+name: Public launch readiness
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'apps/**'
+      - 'supabase/migrations/**'
+      - 'docs/PHASE10.md'
+      - 'docs/launch/**'
+      - 'scripts/create-launch-readiness-manifest.mjs'
+      - '.github/workflows/launch-readiness.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm check
+      - run: pnpm beta:manifest
+      - run: pnpm launch:manifest
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brandloom-launch-readiness-${{ github.sha }}
+          path: |
+            security-static-report.json
+            beta-qa-manifest.json
+            launch-readiness-manifest.json
+          if-no-files-found: error
+          retention-days: 30
