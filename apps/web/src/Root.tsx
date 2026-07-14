@@ -7,6 +7,7 @@ import CommercialApp from './CommercialApp';
 import OptimizationApp from './OptimizationApp';
 import ReliabilityApp from './ReliabilityApp';
 import ActivationApp from './ActivationApp';
+import BetaApp from './BetaApp';
 import { supabase } from './lib/supabase';
 
 export default function Root() {
@@ -30,8 +31,9 @@ export default function Root() {
   if (route === '#optimization') return <OptimizationApp onBack={() => { window.location.hash = ''; }} onOperations={() => { window.location.hash = 'operations'; }} onPublishing={() => { window.location.hash = 'publishing'; }} onCommercial={() => { window.location.hash = 'commercial'; }} />;
   if (route === '#reliability') return <ReliabilityApp onBack={() => { window.location.hash = ''; }} onOperations={() => { window.location.hash = 'operations'; }} onCommercial={() => { window.location.hash = 'commercial'; }} onOptimization={() => { window.location.hash = 'optimization'; }} />;
   if (route === '#activation') return <ActivationApp onBack={() => { window.location.hash = ''; }} onReliability={() => { window.location.hash = 'reliability'; }} />;
+  if (route === '#beta') return <BetaApp onBack={() => { window.location.hash = ''; }} onActivation={() => { window.location.hash = 'activation'; }} onReliability={() => { window.location.hash = 'reliability'; }} />;
   return <>
     <App />
-    {session && <div className="app-launches"><button className="operations-launch" onClick={() => { window.location.hash = 'operations'; }}>Open Operations</button><button className="publishing-launch" onClick={() => { window.location.hash = 'publishing'; }}>Open Publishing</button><button className="commercial-launch" onClick={() => { window.location.hash = 'commercial'; }}>Open Commercial</button><button className="optimization-launch" onClick={() => { window.location.hash = 'optimization'; }}>Open Optimization</button><button className="reliability-launch" onClick={() => { window.location.hash = 'reliability'; }}>Open Reliability</button><button className="activation-launch" onClick={() => { window.location.hash = 'activation'; }}>Open Activation</button></div>}
+    {session && <div className="app-launches"><button className="operations-launch" onClick={() => { window.location.hash = 'operations'; }}>Open Operations</button><button className="publishing-launch" onClick={() => { window.location.hash = 'publishing'; }}>Open Publishing</button><button className="commercial-launch" onClick={() => { window.location.hash = 'commercial'; }}>Open Commercial</button><button className="optimization-launch" onClick={() => { window.location.hash = 'optimization'; }}>Open Optimization</button><button className="reliability-launch" onClick={() => { window.location.hash = 'reliability'; }}>Open Reliability</button><button className="activation-launch" onClick={() => { window.location.hash = 'activation'; }}>Open Activation</button><button className="beta-launch" onClick={() => { window.location.hash = 'beta'; }}>Open Closed Beta</button></div>}
   </>;
 }
