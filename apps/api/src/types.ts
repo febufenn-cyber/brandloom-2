@@ -11,6 +11,7 @@ export type Env = {
   WEB_ORIGIN?: string;
   PUBLIC_API_ORIGIN?: string;
   BETA_APP_ORIGIN?: string;
+  WAITLIST_CONSENT_VERSION?: string;
   RATE_LIMIT_SALT?: string;
   TOKEN_ENCRYPTION_KEY: string;
   PUBLISHING_PROVIDER_MODE?: 'mock' | 'meta';
