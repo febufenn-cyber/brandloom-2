@@ -8,6 +8,7 @@ import './commercial.css';
 import './optimization.css';
 import './reliability.css';
 import './activation.css';
+import './beta.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
